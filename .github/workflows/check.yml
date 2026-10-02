@@ -1,0 +1,36 @@
+name: V0.1 candidate checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-preview:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Prepare pinned tools
+        shell: pwsh
+        run: ./tools/setup-check-tools.ps1
+      - name: Format, lint, boundaries, scenarios and simulation
+        shell: pwsh
+        run: ./tools/check.ps1
+      - name: Build and check the source archive
+        shell: pwsh
+        run: |
+          ./tools/build.ps1
+          & ./.local-tools/love-11.5-win64/lovec.exe artifacts/royal-pocket-casino-desktop-preview.love --self-test
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+  portable-lua:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install distribution Lua 5.1
+        run: sudo apt-get update && sudo apt-get install -y lua5.1
+      - name: Check the portable domain in plain Lua
+        run: lua5.1 -e 'require("tests.run").all()'
+      - name: Check handheld launcher syntax
+        run: bash -n 'packaging/rg35xx-h/Royal Pocket Casino.sh'

@@ -1,0 +1,4 @@
+# Local verification tools and generated experiment artifacts are not source.
+/.local-tools/
+/experiments/love-compatibility/artifacts/
+/artifacts/
